@@ -1,0 +1,4 @@
+type LoginCriteria = {
+    username: string;
+    password: string;
+}

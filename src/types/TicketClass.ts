@@ -1,0 +1,1 @@
+export type TicketClass = "economic" | "business" | "first";
