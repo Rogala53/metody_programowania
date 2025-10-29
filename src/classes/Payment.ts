@@ -1,7 +1,7 @@
 import type { IPayment } from "../interfaces/IPayment"
 import type {PaymentStatus} from "../types/PaymentStatus.ts";
 
-class Payment implements IPayment {
+export class Payment implements IPayment {
     public id: number;
     public userId: number;
     public flightId: number;

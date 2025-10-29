@@ -1,4 +1,4 @@
-type UserCriteria = {
+export type UserCriteria = {
     username: string;
     password: string;
     email: string;

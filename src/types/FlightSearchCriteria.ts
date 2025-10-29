@@ -1,4 +1,4 @@
-type FlightSearchCriteria = {
+export type FlightSearchCriteria = {
     origin: string;
     destination: string;
     date: Date;

@@ -2,7 +2,7 @@ import type { TicketClass } from "../types/TicketClass"
 import type { ITicket } from "../interfaces/ITicket"
 import type {Passenger} from "./Passenger.ts";
 
-class Ticket implements ITicket {
+export class Ticket implements ITicket {
     public id: number;
     public reservationId: number;
     public passenger: Passenger;

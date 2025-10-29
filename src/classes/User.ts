@@ -1,5 +1,5 @@
 import type {IUser} from "../interfaces/IUser"
-class User implements IUser {
+export class User implements IUser {
     public id: number;
     public username: string;
     public email: string;

@@ -1,4 +1,4 @@
-type LoginCriteria = {
+export type LoginCriteria = {
     username: string;
     password: string;
 }

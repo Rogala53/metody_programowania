@@ -1,5 +1,5 @@
 import type { IFlight } from "../interfaces/IFlight"
-class Flight implements IFlight {
+export class Flight implements IFlight {
     public id: number;
     public origin: string;
     public destination: string;

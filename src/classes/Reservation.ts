@@ -1,8 +1,8 @@
 import type { IReservation } from "../interfaces/IReservation"
-import type { IPassenger } from "./IPassenger.ts";
+import type { IPassenger } from "../interfaces/IPassenger.ts";
 import type { ReservationStatus } from "../types/ReservationStatus.ts"
 import { Passenger } from "./Passenger.ts"
-class Reservation implements IReservation {
+export class Reservation implements IReservation {
     public id: number;
     public userId: number;
     public flightId: number;

@@ -1,4 +1,4 @@
-type DbConnectCriteria = {
+export type DbConnectCriteria = {
     server: string;
     database: string;
     username: string;
