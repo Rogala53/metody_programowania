@@ -9,7 +9,8 @@ export class Flight implements IFlight {
     public availableSeats: number;
     public price: number;
 
-    constructor(id: number, origin: string, destination: string, departureTime: Date, arrivalTime: Date, airline: string, availableSeats: number, price: number) {
+    constructor(id: number, origin: string, destination: string, departureTime: Date, arrivalTime: Date,
+                airline: string, availableSeats: number, price: number) {
         this.id = id;
         this.origin = origin;
         this.destination = destination;
