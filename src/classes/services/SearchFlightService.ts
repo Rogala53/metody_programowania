@@ -14,20 +14,28 @@ export class SearchFlightService {
         return this.db.findFlightsInDb(criteria);
 
     }
-    async getFlightDetails(flightId: string): Promise<Flight | null> {
+    async getFlightDetails(flightId: number): Promise<Flight | null> {
         return this.db.findFlightInDbById(flightId);
     }
-    async updateAvailableSeats(flightId: string, seatsToReserve: number): Promise <boolean> {
+    async updateAvailableSeats(flightId: number, seats: number): Promise <boolean> {
         const flight = await this.db.findFlightInDbById(flightId);
         if(!flight) {
             throw new Error("Lot nie istnieje");
         }
-        const newSeats = flight.availableSeats - seatsToReserve;
-        if(newSeats < 0) {
-            throw new Error("Brak wystarczającej liczby miesjc");
+        let newSeats: number;
+        if(seats > 0) {
+            newSeats = flight.availableSeats - seats;
+            if(newSeats < 0) {
+                throw new Error("Brak wystarczającej liczby miejsc");
+            }
         }
+        else {
+            newSeats = flight.availableSeats - seats;
+        }
+
 
         return this.db.updateFlightSeatsInDb(flightId, newSeats);
     }
+
 
 }

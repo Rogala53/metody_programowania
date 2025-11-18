@@ -14,10 +14,10 @@ export class FlightDbService extends DbService {
     findFlightsInDb(criteria: FlightSearchCriteria): Flight[] {
 
     }
-    findFlightInDbById(flightId: string): Flight | null {
+    findFlightInDbById(flightId: number): Flight | null {
 
     }
-    updateFlightSeatsInDb(flightId: string, newSeatsCount: number): boolean {
+    updateFlightSeatsInDb(flightId: number, newSeatsCount: number): boolean {
 
     }
 }

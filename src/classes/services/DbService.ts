@@ -11,5 +11,8 @@ export abstract class DbService {
         this.username = username;
         this.password = password;
     }
-    public connect(db: DbConnectCriteria): boolean;
+    public connect(): boolean {
+        console.log("Connected to database: ");
+        return true;
+    }
 }

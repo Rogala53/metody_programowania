@@ -1,10 +1,11 @@
-import {Passenger} from "../classes/Passenger"
+import {IPassenger} from "../interfaces/IPassenger"
 import {TicketClass} from "./TicketClass";
 
 export type TicketCriteria = {
     id: number;
-    reservationId: string;
-    passenger: Passenger;
+    userId: number;
+    reservationId: number;
+    passengers: IPassenger[];
     seatNumber: string;
     ticketClass: TicketClass;
 }

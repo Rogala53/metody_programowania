@@ -1,19 +1,22 @@
 import type { TicketClass } from "../types/TicketClass"
 import type { ITicket } from "../interfaces/ITicket"
-import type {Passenger} from "./Passenger.ts";
+import type { IPassenger } from "../interfaces/IPassenger";
+import type {TicketCriteria} from "../types/TicketCriteria.ts";
 
 export class Ticket implements ITicket {
     public id: number;
+    public userId: number;
     public reservationId: number;
-    public passenger: Passenger;
+    public passenger: IPassenger;
     public seatNumber: string;
     public ticketClass: TicketClass
-    constructor(id: number, reservationId: number, passenger: Passenger, seatNumber: string, ticketClass: TicketClass) {
-        this.id = id;
-        this.reservationId = reservationId;
-        this.passenger = passenger;
-        this.seatNumber = seatNumber;
-        this.ticketClass = ticketClass;
+    constructor(ticketCriteria: TicketCriteria) {
+        this.id = ticketCriteria.id;
+        this.userId = ticketCriteria.userId;
+        this.reservationId = ticketCriteria.reservationId;
+        this.passenger = ticketCriteria.passenger;
+        this.seatNumber = ticketCriteria.seatNumber;
+        this.ticketClass = ticketCriteria.ticketClass;
     }
 
 

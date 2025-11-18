@@ -1,1 +1,6 @@
-export type PaymentStatus = "accepted" | "pending" | "cancelled";
+export type PaymentStatus =
+    "accepted" |
+    "pending" |
+    "cancelled" |
+    "rejected" |
+    "refunded";
