@@ -1,5 +1,3 @@
-import type {DbConnectCriteria} from "../../types/DbConnectCriteria"
-
 export abstract class DbService {
     private database: string;
     private server: string;
