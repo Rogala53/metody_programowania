@@ -68,7 +68,7 @@ class ReservationService {
     async cancelReservation(reservation: IReservation): Promise<boolean> {
         //Logika anulowania
         //1.Usunięcie rezerwacji z bazy danych
-        this.db.removeReservationInDb(reservation);
+        await this.db.removeReservationInDb(reservation);
 
         //2.Zlecenie wykonania zwrotu pieniędzy
         const payment = this.paymentService.payments.find(payment => payment.id === reservation.paymentId);
@@ -87,7 +87,7 @@ class ReservationService {
         //3.Zwolnienie miejsca (FlightService)
         const flightId: number = reservation.flightId;
         const seatsToFreeUp: number = -(reservation.passengers.length);
-        this.flightService.updateAvailableSeats(flightId, seatsToFreeUp);
+        await this.flightService.updateAvailableSeats(flightId, seatsToFreeUp);
 
 
         console.log(`Pomyślnie anulowano rezerwację ${reservation.id}`);

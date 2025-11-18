@@ -5,7 +5,7 @@ export type TicketCriteria = {
     id: number;
     userId: number;
     reservationId: number;
-    passengers: IPassenger[];
+    passenger: IPassenger;
     seatNumber: string;
     ticketClass: TicketClass;
 }

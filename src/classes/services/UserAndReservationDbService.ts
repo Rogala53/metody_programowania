@@ -6,10 +6,10 @@ export class UserAndReservationDbService extends DbService {
     constructor(database: string, server: string, username: string, password: string) {
         super(database, server, username, password);
     }
-    addUserInDb(user: User): boolean;
-    removeUserInDb(user: User): boolean;
-    addReservationInDb(user: User, reservation: Reservation): boolean;
-    removeReservationInDb(reservation: Reservation): boolean;
-    updateReservationInDb(reservation: Reservation): boolean;
+    async addUserInDb(user: User): Promise<boolean>;
+    async removeUserInDb(user: User): Promise<boolean>;
+    async addReservationInDb(user: User, reservation: Reservation): Promise<boolean>;
+    async removeReservationInDb(reservation: Reservation): Promise<boolean>;
+    async updateReservationInDb(reservation: Reservation): Promise<boolean>;
     findUserByEmailInDb(email: string): User | null;
 }

@@ -6,25 +6,30 @@ export class TicketService {
 
     //dodanie generatora PDF i email klienta
     constructor() {}
-    async generateAndSendTicket(reservation: IReservation, user: IUser): Promise<boolean> {
+    async generateAndSendTickets(reservation: IReservation, user: IUser): Promise<boolean> {
         console.log(`Generowanie biletu dla rezerwacji ${reservation.id}`);
-
-        const ticketData: TicketCriteria = {
-            id: 152, //przykładowe id
-            reservationId: reservation.id,
-            userId: reservation.user.id,
-            passengers: reservation.passengers,
-            seatNumber: "12A",
-            ticketClass: "economic"
-        };
-        const ticket = new Ticket(ticketData);
+        let tickets: Ticket[] = [];
+        for(let i = 0; i < reservation.passengers.length; i++) {
+            const ticketData: TicketCriteria = {
+                id: 152, //przykładowe id
+                reservationId: reservation.id,
+                userId: reservation.user.id,
+                passenger: reservation.passengers[i],
+                seatNumber: "12A",
+                ticketClass: reservation.tickets[i].ticketClass,
+            };
+            const ticket = new Ticket(ticketData);
+            tickets.push(ticket);
+        }
         //generowanie pdf i wysyłka na email użytkownika
-        this.generateTicket(ticket);
+        for(const ticket of tickets) {
+             this.generateTicket(ticket);
+             this.sendEmail(ticket, user.email);
+        }
 
+        //symulacja generowania biletu, wysyłki email
         await new Promise(resolve => setTimeout(resolve, 1000));
-
-        this.sendEmail(ticket, user.email);
-        console.log(`Bilet ${ticket.id} wysłany na email użytkownika o id ${reservation.user.id}`);
+        console.log(`Bilety wysłane na email użytkownika o id ${reservation.user.id}`);
         return true;
     }
 
