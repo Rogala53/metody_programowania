@@ -10,7 +10,7 @@ export abstract class DbService {
         this.password = password;
     }
     public connect(): boolean {
-        console.log("Connected to database: ");
+        console.log("Connected to database");
         return true;
     }
 }

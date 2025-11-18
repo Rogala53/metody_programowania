@@ -1,12 +1,14 @@
 import type {TicketCriteria} from "../../types/TicketCriteria.ts";
-import {Ticket} from "../Ticket.ts";
-import type {IUser} from "../../interfaces/IUser.ts";
 import type {IReservation} from "../../interfaces/IReservation.ts";
-export class TicketService {
+import type {ITicketService} from "../../interfaces/ITicketService.ts";
+import {Ticket} from "../Ticket.ts";
+import type {ITicket} from "../../interfaces/ITicket.ts";
+
+export class TicketService implements ITicketService {
 
     //dodanie generatora PDF i email klienta
     constructor() {}
-    async generateAndSendTickets(reservation: IReservation, user: IUser): Promise<boolean> {
+    async generateAndSendTickets(reservation: IReservation): Promise<boolean> {
         console.log(`Generowanie biletu dla rezerwacji ${reservation.id}`);
         let tickets: Ticket[] = [];
         for(let i = 0; i < reservation.passengers.length; i++) {
@@ -15,7 +17,7 @@ export class TicketService {
                 reservationId: reservation.id,
                 userId: reservation.user.id,
                 passenger: reservation.passengers[i],
-                seatNumber: "12A",
+                seatNumber: "12A", // przykladowy numer miejsca
                 ticketClass: reservation.tickets[i].ticketClass,
             };
             const ticket = new Ticket(ticketData);
@@ -24,7 +26,7 @@ export class TicketService {
         //generowanie pdf i wysyłka na email użytkownika
         for(const ticket of tickets) {
              this.generateTicket(ticket);
-             this.sendEmail(ticket, user.email);
+             this.sendEmail(ticket, reservation.user.email);
         }
 
         //symulacja generowania biletu, wysyłki email
@@ -33,11 +35,11 @@ export class TicketService {
         return true;
     }
 
-    generateTicket(ticket: Ticket) {
+    generateTicket(ticket: ITicket) {
         console.log(`Generowanie pliku PDF dla ${ticket.id}`);
         return true;
     }
-    sendEmail(ticket: Ticket, mail: string): boolean {
+    sendEmail(ticket: ITicket, mail: string): boolean {
         console.log(`Wysyłanie ${ticket.id} na ${mail}`);
         return true;
     }

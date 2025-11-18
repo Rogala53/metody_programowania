@@ -9,7 +9,7 @@ class UserService {
         this.db = db;
     }
     async logIn(credentials: LoginCriteria): Promise<IUser | null> {
-        const user = await this.db.findUserByEmailInDb(credentials.username);
+        const user = await this.db.findUserByEmail(credentials.username);
         const passwordMatch = (credentials.password == "password");
 
         if(passwordMatch) {
@@ -21,21 +21,24 @@ class UserService {
     }
     async createAccount(data: UserCriteria): Promise<boolean> {
         const hashedPassword = data.password //hash password
+
+
         const newUser: IUser = {
-            id: Math.random(),
+            id: 1,
             username: data.username,
             email: data.email,
             password: hashedPassword,
         };
-        return this.db.addUserInDb(newUser);
+        return this.db.addUser(newUser);
     }
-    async updateUserEmail(user: IUser, newEmail: string): Promise<void> {
-        const userExists: boolean = this.db.findUserByEmailInDb(user.email) != null;
+    async updateUserEmail(user: IUser, newEmail: string): Promise<boolean> {
+        const userExists: boolean = this.db.findUserByEmail(newEmail) != null;
         if(userExists) {
             throw new Error("Użytkownik z takim emailem już istnieje");
         }
         else {
              user.email = newEmail;
+             return true;
         }
 
     }

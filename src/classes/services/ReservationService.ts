@@ -5,7 +5,6 @@ import {PaymentService} from "./PaymentService.ts";
 import {SearchFlightService} from "./SearchFlightService.ts";
 import type {UserAndReservationDbService} from "./UserAndReservationDbService.ts";
 import {Reservation} from "../Reservation.ts";
-//główna klasa
 class ReservationService {
     private db: UserAndReservationDbService;
     private ticketService: TicketService;
@@ -45,14 +44,15 @@ class ReservationService {
                 flightId: flight.id,
                 paymentId: criteria.flightId,
                 passengers: criteria.passengers,
+                tickets: criteria.tickets,
                 status: "confirmed",
                 totalPrice: totalPrice,
                 createdAt: new Date()
             };
             const newReservation = new Reservation(reservationData);
-            const addingSuccess = await this.db.addReservationInDb(reservationData.user, newReservation);
+            const addingSuccess = await this.db.addReservation(newReservation);
 
-            const sendingSuccess = await this.ticketService.generateAndSendTicket(newReservation, criteria.user);
+            const sendingSuccess = await this.ticketService.generateAndSendTickets(newReservation);
 
             return addingSuccess && sendingSuccess;
         } catch (error) {
@@ -60,15 +60,16 @@ class ReservationService {
             return false;
         }
    }
-   editReservation(reservation: IReservation): boolean {
+   async editReservation(reservation: IReservation): Promise<boolean> {
         //Logika edycji (np. zmiana pasażerów)
         console.log(`Edytowanie rezerwacji ${reservation.id}`);
-        return true;
+        return this.db.updateReservation(reservation);
    }
     async cancelReservation(reservation: IReservation): Promise<boolean> {
         //Logika anulowania
+
         //1.Usunięcie rezerwacji z bazy danych
-        await this.db.removeReservationInDb(reservation);
+        await this.db.removeReservation(reservation);
 
         //2.Zlecenie wykonania zwrotu pieniędzy
         const payment = this.paymentService.payments.find(payment => payment.id === reservation.paymentId);
@@ -84,7 +85,7 @@ class ReservationService {
             return false;
         }
 
-        //3.Zwolnienie miejsca (FlightService)
+        //3.Zwolnienie miejsca
         const flightId: number = reservation.flightId;
         const seatsToFreeUp: number = -(reservation.passengers.length);
         await this.flightService.updateAvailableSeats(flightId, seatsToFreeUp);

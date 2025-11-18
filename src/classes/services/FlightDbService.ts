@@ -1,18 +1,19 @@
 import {DbService} from "./DbService"
-import type {Flight} from "../Flight"
 import type {FlightSearchCriteria} from "../../types/FlightSearchCriteria"
+import type {IFlight} from "../../interfaces/IFlight.ts";
+
 export class FlightDbService extends DbService {
-    private flightsTable: Flight[] = [];
+    private flightsTable: IFlight[] = [];
 
     constructor(database: string, server: string, username: string, password: string) {
         super(database, server, username, password);
     }
-    async addFlightInDb(flight: Flight): Promise<boolean> {
+    async addFlight(flight: IFlight): Promise<boolean> {
         console.log(`db: dodawanie lotu ${flight.id}`);
         this.flightsTable.push(flight);
         return true;
     }
-    deleteFlightInDb(flight: Flight): boolean {
+    async deleteFlight(flight: IFlight): Promise<boolean> {
         const index = this.flightsTable.indexOf(flight);
         if(index > -1) {
             console.log(`db: usuwanie lotu ${flight.id}`);
@@ -21,7 +22,7 @@ export class FlightDbService extends DbService {
         }
         return false;
     }
-    findFlightsInDb(criteria: FlightSearchCriteria): Flight[] {
+    async findFlights(criteria: FlightSearchCriteria): Promise<IFlight[]> {
         console.log("db: szukanie lotów: ", criteria);
 
         //filtrowanie lotów
@@ -34,11 +35,11 @@ export class FlightDbService extends DbService {
             return matchesOrigin && matchesDest && matchesDate && hasSeats;
         });
     }
-    async findFlightInDbById(flightId: number): Promise<Flight | null> {
+    async findFlightById(flightId: number): Promise<IFlight | null> {
         const flight = this.flightsTable.find(flight => flight.id === flightId);
         return flight || null;
     }
-    async updateFlightSeatsInDb(flightId: number, newSeatsCount: number): Promise<boolean> {
+    async updateFlightSeats(flightId: number, newSeatsCount: number): Promise<boolean> {
         const flight = this.flightsTable.find(flight => flight.id === flightId);
         if(flight) {
             console.log(`db: akutalizacja miesjc dla lotu ${flightId}`);

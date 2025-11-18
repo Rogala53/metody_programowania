@@ -11,14 +11,14 @@ export class SearchFlightService {
         if(criteria.passengerCount <= 0) {
             throw new Error("Liczba pasażerów musi być dodatnia");
         }
-        return this.db.findFlightsInDb(criteria);
+        return this.db.findFlights(criteria);
 
     }
     async getFlightDetails(flightId: number): Promise<Flight | null> {
-        return this.db.findFlightInDbById(flightId);
+        return this.db.findFlightById(flightId);
     }
     async updateAvailableSeats(flightId: number, seats: number): Promise <boolean> {
-        const flight = await this.db.findFlightInDbById(flightId);
+        const flight = await this.db.findFlightById(flightId);
         if(!flight) {
             throw new Error("Lot nie istnieje");
         }
@@ -34,7 +34,7 @@ export class SearchFlightService {
         }
 
 
-        return this.db.updateFlightSeatsInDb(flightId, newSeats);
+        return this.db.updateFlightSeats(flightId, newSeats);
     }
 
 
