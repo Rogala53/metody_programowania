@@ -1,20 +1,21 @@
 import type {ReservationCriteria} from "../../types/ReservationCriteria.ts";
 import type { IReservation } from "../../interfaces/IReservation.ts";
-import {TicketService} from "./TicketService.ts";
-import {PaymentService} from "./PaymentService.ts";
-import {SearchFlightService} from "./SearchFlightService.ts";
-import type {UserAndReservationDbService} from "./UserAndReservationDbService.ts";
 import {Reservation} from "../Reservation.ts";
-class ReservationService {
-    private db: UserAndReservationDbService;
-    private ticketService: TicketService;
-    private paymentService: PaymentService;
-    private flightService: SearchFlightService;
+import type {ITicketService} from "../../interfaces/ITicketService.ts";
+import type {IPaymentService} from "../../interfaces/IPaymentService.ts";
+import type {IReservationDbService} from "../../interfaces/IReservationDbService.ts";
+import type {ISearchFlightService} from "../../interfaces/ISearchFlightService.ts";
 
-    constructor(db: UserAndReservationDbService,
-                ticketService: TicketService,
-                paymentService: PaymentService,
-                flightService: SearchFlightService) {
+export class ReservationService {
+    private db: IReservationDbService;
+    private ticketService: ITicketService;
+    private paymentService: IPaymentService;
+    private flightService: ISearchFlightService;
+
+    constructor(db: IReservationDbService,
+                ticketService: ITicketService,
+                paymentService: IPaymentService,
+                flightService: ISearchFlightService) {
         this.db = db;
         this.ticketService = ticketService;
         this.paymentService = paymentService;
@@ -30,26 +31,31 @@ class ReservationService {
 
             const totalPrice = flight.price * criteria.passengers.length;
 
-            const paymentSuccess = await this.paymentService.payForReservation(totalPrice, criteria.user);
-
-            if(!paymentSuccess) {
-                throw new Error("Płatność nie powiodła się.");
-            }
-
-            await this.flightService.updateAvailableSeats(flight.id, criteria.passengers.length)
-
             const reservationData: ReservationCriteria = {
-                id: Math.random(),
+                id: criteria.id,
                 user: criteria.user,
                 flightId: flight.id,
-                paymentId: criteria.flightId,
+                paymentId: criteria.paymentId,
                 passengers: criteria.passengers,
                 tickets: criteria.tickets,
+                ticketsClass: criteria.ticketsClass,
                 status: "confirmed",
                 totalPrice: totalPrice,
                 createdAt: new Date()
             };
             const newReservation = new Reservation(reservationData);
+
+
+            const paymentSuccess = await this.paymentService.payForReservation(newReservation ,totalPrice);
+
+            if(!paymentSuccess) {
+                throw new Error("Płatność nie powiodła się.");
+            }
+
+            await this.flightService.updateAvailableSeats(flight.id, criteria.passengers.length);
+
+
+
             const addingSuccess = await this.db.addReservation(newReservation);
 
             const sendingSuccess = await this.ticketService.generateAndSendTickets(newReservation);
@@ -72,13 +78,14 @@ class ReservationService {
         await this.db.removeReservation(reservation);
 
         //2.Zlecenie wykonania zwrotu pieniędzy
-        const payment = this.paymentService.payments.find(payment => payment.id === reservation.paymentId);
+        const payment = await this.paymentService.findPayment(reservation.paymentId);
         if(!payment) {
             console.error("Błąd nie znaleziono platności powiązanej z tą rezerwacją");
             return false;
         }
 
         const refundSuccess: boolean = await this.paymentService.refundPayment(payment);
+
 
         if(!refundSuccess) {
             console.error("Błąd zwrot środków nie powiódł się");

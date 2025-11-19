@@ -10,7 +10,7 @@ export class TicketService implements ITicketService {
     constructor() {}
     async generateAndSendTickets(reservation: IReservation): Promise<boolean> {
         console.log(`Generowanie biletu dla rezerwacji ${reservation.id}`);
-        let tickets: Ticket[] = [];
+        let tickets: ITicket[] = [];
         for(let i = 0; i < reservation.passengers.length; i++) {
             const ticketData: TicketCriteria = {
                 id: 152, //przykładowe id
@@ -18,9 +18,9 @@ export class TicketService implements ITicketService {
                 userId: reservation.user.id,
                 passenger: reservation.passengers[i],
                 seatNumber: "12A", // przykladowy numer miejsca
-                ticketClass: reservation.tickets[i].ticketClass,
+                ticketClass: reservation.ticketsClass,
             };
-            const ticket = new Ticket(ticketData);
+            const ticket: ITicket = new Ticket(ticketData);
             tickets.push(ticket);
         }
         //generowanie pdf i wysyłka na email użytkownika
@@ -43,5 +43,7 @@ export class TicketService implements ITicketService {
         console.log(`Wysyłanie ${ticket.id} na ${mail}`);
         return true;
     }
+
+
 
 }

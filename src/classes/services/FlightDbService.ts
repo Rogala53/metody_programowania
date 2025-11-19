@@ -27,6 +27,8 @@ export class FlightDbService extends DbService {
 
         //filtrowanie lotów
         return this.flightsTable.filter(flight => {
+            //sprawdza, czy użytkownik podał np.miasto wylotu, jeśli tak sprawdza czy są równe, jeśli nie to zwraca true
+            //żeby nie odrzucić lotu tylko dlatego, że jakieś kryterium nie zostało podane
             const matchesOrigin = criteria.origin ? flight.origin === criteria.origin : true;
             const matchesDest = criteria.destination ? flight.destination === criteria.destination : true;
             const matchesDate = criteria.date ? flight.departureTime.toDateString() === criteria.date.toDateString() : true;
@@ -42,7 +44,7 @@ export class FlightDbService extends DbService {
     async updateFlightSeats(flightId: number, newSeatsCount: number): Promise<boolean> {
         const flight = this.flightsTable.find(flight => flight.id === flightId);
         if(flight) {
-            console.log(`db: akutalizacja miesjc dla lotu ${flightId}`);
+            console.log(`db: akutalizacja miejsc dla lotu ${flightId}`);
             flight.availableSeats = newSeatsCount;
             return true;
         }

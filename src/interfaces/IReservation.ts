@@ -2,6 +2,7 @@ import type { IPassenger } from "./IPassenger.ts";
 import type { ReservationStatus } from "../types/ReservationStatus.ts"
 import type { IUser } from "./IUser.ts";
 import type {ITicket} from "./ITicket.ts";
+import type {TicketClass} from "../types/TicketClass.ts";
 export interface IReservation {
 
     id: number;
@@ -10,6 +11,7 @@ export interface IReservation {
     paymentId: number;
     passengers: IPassenger[];
     tickets: ITicket[];
+    ticketsClass: TicketClass;
     status: ReservationStatus;
     totalPrice: number;
     createdAt: Date;

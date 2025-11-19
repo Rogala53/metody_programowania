@@ -1,8 +1,9 @@
 import type { IPayment } from "./IPayment.ts";
-import type {IUser} from "./IUser.ts";
+import type {IReservation} from "./IReservation.ts";
 
 export interface IPaymentService {
-    payForReservation(price: number, user: IUser): Promise<boolean>;
+    payForReservation(reservation: IReservation, price: number): Promise<boolean>;
     refundPayment(payment: IPayment): Promise<boolean>;
     cancelPayment(payment: IPayment): Promise<boolean>;
+    findPayment(paymentId: number): Promise<IPayment | undefined>;
 }

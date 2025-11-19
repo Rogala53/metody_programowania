@@ -1,10 +1,11 @@
 import {Flight} from "../Flight.ts";
 import type {FlightSearchCriteria} from "../../types/FlightSearchCriteria.ts";
-import type {FlightDbService} from "./FlightDbService.ts";
+import type {IFlightDbService} from "../../interfaces/IFlightDbService.ts";
+import type {ISearchFlightService} from "../../interfaces/ISearchFlightService.ts";
 
-export class SearchFlightService {
-    private db: FlightDbService;
-    constructor(db: FlightDbService) {
+export class SearchFlightService implements ISearchFlightService {
+    private db: IFlightDbService;
+    constructor(db: IFlightDbService) {
         this.db = db;
     }
     async findFlights(criteria: FlightSearchCriteria): Promise<Flight[]> {
@@ -32,8 +33,6 @@ export class SearchFlightService {
         else {
             newSeats = flight.availableSeats - seats;
         }
-
-
         return this.db.updateFlightSeats(flightId, newSeats);
     }
 
