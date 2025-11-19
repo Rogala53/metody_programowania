@@ -1,9 +1,9 @@
 import {Flight} from "../Flight.ts";
 import type {FlightSearchCriteria} from "../../types/FlightSearchCriteria.ts";
 import type {IFlightDbService} from "../../interfaces/IFlightDbService.ts";
-import type {ISearchFlightService} from "../../interfaces/ISearchFlightService.ts";
+import type {IFlightService} from "../../interfaces/IlightService.ts";
 
-export class SearchFlightService implements ISearchFlightService {
+export class FlightService implements IFlightService {
     private db: IFlightDbService;
     constructor(db: IFlightDbService) {
         this.db = db;

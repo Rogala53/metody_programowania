@@ -4,18 +4,18 @@ import {Reservation} from "../Reservation.ts";
 import type {ITicketService} from "../../interfaces/ITicketService.ts";
 import type {IPaymentService} from "../../interfaces/IPaymentService.ts";
 import type {IReservationDbService} from "../../interfaces/IReservationDbService.ts";
-import type {ISearchFlightService} from "../../interfaces/ISearchFlightService.ts";
+import type {IFlightService} from "../../interfaces/IFlightService.ts";
 
 export class ReservationService {
     private db: IReservationDbService;
     private ticketService: ITicketService;
     private paymentService: IPaymentService;
-    private flightService: ISearchFlightService;
+    private flightService: IFlightService;
 
     constructor(db: IReservationDbService,
                 ticketService: ITicketService,
                 paymentService: IPaymentService,
-                flightService: ISearchFlightService) {
+                flightService: IFlightService) {
         this.db = db;
         this.ticketService = ticketService;
         this.paymentService = paymentService;

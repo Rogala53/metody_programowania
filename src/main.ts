@@ -1,7 +1,7 @@
 import { FlightDbService } from "./classes/services/FlightDbService";
 import { UserDbService } from "./classes/services/UserDbService.ts";
 import { ReservationDbService} from "./classes/services/ReservationDbService.ts";
-import { SearchFlightService } from "./classes/services/SearchFlightService";
+import { FlightService } from "./classes/services/FlightService";
 import { PaymentService } from "./classes/services/PaymentService";
 import { TicketService } from "./classes/services/TicketService";
 import { ReservationService } from "./classes/services/ReservationService";
@@ -26,7 +26,7 @@ async function main() {
     await userDb.addUser(user);
 
     // 2. Warstwa Usług Domenowych (Services)
-    const flightService = new SearchFlightService(flightDb);
+    const flightService = new FlightService(flightDb);
     const paymentService = new PaymentService();
     const ticketService = new TicketService();
 
