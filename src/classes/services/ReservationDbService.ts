@@ -1,6 +1,7 @@
 import type {IReservationDbService} from "../../interfaces/IReservationDbService.ts";
 import type {IReservation} from "../../interfaces/IReservation.ts";
 import {DbService} from "./DbService.ts";
+import {DataNotFoundError} from "../../exceptions/DataNotFoundError.ts";
 
 export class ReservationDbService extends DbService implements IReservationDbService {
     private reservations: IReservation[] = [];
@@ -22,7 +23,9 @@ export class ReservationDbService extends DbService implements IReservationDbSer
             console.log(`db: usuwanie rezerwacji ${index}`);
             return true;
         }
-        return false;
+        else {
+            throw new DataNotFoundError("Nie znaleziono rezerwacji");
+        }
     }
 
     async updateReservation(reservation: IReservation): Promise<boolean> {
@@ -31,6 +34,8 @@ export class ReservationDbService extends DbService implements IReservationDbSer
             this.reservations[index] = reservation;
             return true;
         }
-        return false;
+        else {
+            throw new DataNotFoundError("Nie znaleziono rezerwacji");
+        }
     }
 }

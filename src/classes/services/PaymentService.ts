@@ -3,6 +3,7 @@ import type {IPaymentService} from "../../interfaces/IPaymentService.ts";
 import type {IPayment} from "../../interfaces/IPayment.ts";
 import type {IReservation} from "../../interfaces/IReservation.ts";
 import {Payment} from "../Payment.ts";
+import {DataNotFoundError} from "../../exceptions/DataNotFoundError.ts";
 
 export class PaymentService implements IPaymentService {
     payments: IPayment[] = [];
@@ -33,13 +34,19 @@ export class PaymentService implements IPaymentService {
         return true;
     }
 
-    async refundPayment(payment: IPayment): Promise<boolean> {
+    async refundPayment(payment: IPayment | undefined): Promise<boolean> {
         console.log(`Zwrot na konto przypisane do ${payment.userId}`)
         payment.status = "refunded";
         return true;
     }
 
-    async findPayment(id: number): Promise<IPayment | undefined> {
-        return this.payments.find(p => p.id === id);
+    async findPayment(id: number): Promise<IPayment> {
+        const payment: IPayment | undefined = this.payments.find(p => p.id === id);
+        if(payment == undefined) {
+            throw new DataNotFoundError("Nie znaleziono płatności");
+        }
+        else {
+            return payment;
+        }
     }
 }

@@ -1,6 +1,7 @@
 import {DbService} from "./DbService"
 import type {FlightSearchCriteria} from "../../types/FlightSearchCriteria"
 import type {IFlight} from "../../interfaces/IFlight.ts";
+import {DataNotFoundError} from "../../exceptions/DataNotFoundError.ts";
 
 export class FlightDbService extends DbService {
     private flightsTable: IFlight[] = [];
@@ -48,6 +49,9 @@ export class FlightDbService extends DbService {
             flight.availableSeats = newSeatsCount;
             return true;
         }
-        return false;
+        else {
+            throw new DataNotFoundError("Nie znaleziono lotu");
+        }
+
     }
 }

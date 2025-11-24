@@ -5,6 +5,8 @@ import type {ITicketService} from "../../interfaces/ITicketService.ts";
 import type {IPaymentService} from "../../interfaces/IPaymentService.ts";
 import type {IReservationDbService} from "../../interfaces/IReservationDbService.ts";
 import type {IFlightService} from "../../interfaces/IFlightService.ts";
+import {DataNotFoundError} from "../../exceptions/DataNotFoundError.ts";
+import {PaymentError} from "../../exceptions/PaymentError.ts";
 
 export class ReservationService {
     private db: IReservationDbService;
@@ -26,7 +28,7 @@ export class ReservationService {
         try {
             const flight = await this.flightService.getFlightDetails(criteria.flightId);
             if(!flight) {
-                throw new Error("Wybrany lot nie istnieje.");
+                throw new DataNotFoundError("Wybrany lot nie istnieje.");
             }
 
             const totalPrice = flight.price * criteria.passengers.length;
@@ -49,7 +51,7 @@ export class ReservationService {
             const paymentSuccess = await this.paymentService.payForReservation(newReservation ,totalPrice);
 
             if(!paymentSuccess) {
-                throw new Error("Płatność nie powiodła się.");
+                throw new PaymentError("Płatność nie powiodła się.");
             }
 
             await this.flightService.updateAvailableSeats(flight.id, criteria.passengers.length);
@@ -75,29 +77,22 @@ export class ReservationService {
         //Logika anulowania
 
         //1.Usunięcie rezerwacji z bazy danych
-        await this.db.removeReservation(reservation);
+        try {
+            await this.db.removeReservation(reservation);
 
-        //2.Zlecenie wykonania zwrotu pieniędzy
-        const payment = await this.paymentService.findPayment(reservation.paymentId);
-        if(!payment) {
-            console.error("Błąd nie znaleziono platności powiązanej z tą rezerwacją");
-            return false;
+            //2.Zlecenie wykonania zwrotu pieniędzy
+            const payment = await this.paymentService.findPayment(reservation.paymentId);
+
+            await this.paymentService.refundPayment(payment);
+
+            //3.Zwolnienie miejsca
+            const flightId: number = reservation.flightId;
+            const seatsToFreeUp: number = -(reservation.passengers.length);
+            await this.flightService.updateAvailableSeats(flightId, seatsToFreeUp);
         }
-
-        const refundSuccess: boolean = await this.paymentService.refundPayment(payment);
-
-
-        if(!refundSuccess) {
-            console.error("Błąd zwrot środków nie powiódł się");
-            return false;
+        catch(error) {
+            console.error(error);
         }
-
-        //3.Zwolnienie miejsca
-        const flightId: number = reservation.flightId;
-        const seatsToFreeUp: number = -(reservation.passengers.length);
-        await this.flightService.updateAvailableSeats(flightId, seatsToFreeUp);
-
-
         console.log(`Pomyślnie anulowano rezerwację ${reservation.id}`);
         return true;
     }
