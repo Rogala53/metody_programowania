@@ -5,8 +5,11 @@ import type {ITicketService} from "../../interfaces/ITicketService.ts";
 import type {IPaymentService} from "../../interfaces/IPaymentService.ts";
 import type {IReservationDbService} from "../../interfaces/IReservationDbService.ts";
 import type {IFlightService} from "../../interfaces/IFlightService.ts";
-import {DataNotFoundError} from "../../exceptions/DataNotFoundError.ts";
-import {PaymentError} from "../../exceptions/PaymentError.ts";
+import {ValidationError} from "../../exceptions/ValidationError.ts";
+import {Logger} from "../Logger.ts";
+import {InfrastructureError} from "../../exceptions/InfrastructureError.ts";
+import {DomainError} from "../../exceptions/DomainError.ts";
+import {Payment} from "../Payment.ts";
 
 export class ReservationService {
     private db: IReservationDbService;
@@ -24,11 +27,16 @@ export class ReservationService {
         this.flightService = flightService;
     }
 
-   async createReservation(criteria: ReservationCriteria): Promise<boolean> {
+   async createReservation(criteria: ReservationCriteria): Promise<void> {
+        Logger.info(`Tworzenie rezerwacji dla lotu: ${criteria.flightId}`);
         try {
+            if(criteria.passengers.length <= 0) {
+                throw new ValidationError("Rezerwacja musi zawierać co najmnniej jednego pasażera");
+            }
+
             const flight = await this.flightService.getFlightDetails(criteria.flightId);
             if(!flight) {
-                throw new DataNotFoundError("Wybrany lot nie istnieje.");
+                throw new DomainError("Wybrany lot nie istnieje.");
             }
 
             const totalPrice = flight.price * criteria.passengers.length;
@@ -47,54 +55,110 @@ export class ReservationService {
             };
             const newReservation = new Reservation(reservationData);
 
-
-            const paymentSuccess = await this.paymentService.payForReservation(newReservation ,totalPrice);
-
-            if(!paymentSuccess) {
-                throw new PaymentError("Płatność nie powiodła się.");
+            try {
+                await this.paymentService.payForReservation(newReservation ,totalPrice);
+            } catch(error) {
+                throw error;
             }
 
-            await this.flightService.updateAvailableSeats(flight.id, criteria.passengers.length);
+            try {
+                await this.flightService.updateAvailableSeats(flight.id, criteria.passengers.length);
+            } catch(error) {
+                Logger.warn(`Błąd zajmowania miejsc. Wycofywanie płatności dla rezerwacji ${newReservation.id}`);
+                await this.paymentService.refundPayment(
+                    new Payment(newReservation.id, newReservation.user.id, newReservation.flightId, "accepted")
+                );
 
+                throw new InfrastructureError("Błąd zapisu rezerwacji. Środki zostały zwrócone", error)
+            }
+            try {
+                await this.db.addReservation(newReservation);
+            } catch(error) {
+                Logger.error(`Krytyczny błąd zapisu DB. Rollback transakcji ${newReservation.id}`);
 
+                await this.flightService.updateAvailableSeats(flight.id, -criteria.passengers.length);
 
-            const addingSuccess = await this.db.addReservation(newReservation);
+                await this.paymentService.refundPayment(
+                    new Payment(newReservation.id, newReservation.user.id, newReservation.flightId, "accepted")
+                );
 
-            const sendingSuccess = await this.ticketService.generateAndSendTickets(newReservation);
+                throw new InfrastructureError(`Błąd zapisu rezerwacji ${newReservation.id}. Środki zostały zwrócone.`);
+            }
 
-            return addingSuccess && sendingSuccess;
+            Logger.info(`Rezerwacja ${newReservation.id} zakończona sukcesem.`);
+
+            try {
+                await this.ticketService.generateAndSendTickets(newReservation);
+
+            } catch(error) {
+                Logger.error(`Rezerwacja udana, ale błąd wysyłki biletów dla ${newReservation.id}`);
+            }
+
         } catch (error) {
-            console.error("Błąd podczas tworzenia rezerwacji");
-            return false;
+            if (error instanceof DomainError ||
+                error instanceof ValidationError ||
+                error instanceof InfrastructureError) {
+                    throw error;
+            }
+
+            throw new InfrastructureError("Nieoczekiwany błąd podczas tworzenia rezerwacji", error);
         }
    }
-   async editReservation(reservation: IReservation): Promise<boolean> {
+
+   async editReservation(reservation: IReservation): Promise<void> {
+        Logger.info(`Rozpoczęcie edycji rezerwacji ${reservation.id}`);
         //Logika edycji (np. zmiana pasażerów)
-        console.log(`Edytowanie rezerwacji ${reservation.id}`);
-        return this.db.updateReservation(reservation);
+        try {
+            if(!reservation.passengers || reservation.passengers.length === 0) {
+                throw new DomainError("Rezerwacja musi zawierać co najmniej jednego pasażera");
+            }
+
+            if(reservation.status === "cancelled" || reservation.status === "rejected") {
+                throw new DomainError(`Nie można edytować rezerwacji o statusie ${reservation.id}`);
+            }
+            await this.db.updateReservation(reservation);
+
+            Logger.info(`Pomyślnie zaktualizowano rezerwację ${reservation.id}`);
+        } catch (error) {
+            if (error instanceof DomainError) throw error;
+
+            throw new InfrastructureError(`Nieoczekiwany błąd podczas edycji rezerwacji ${reservation.id}`);
+        }
+
    }
-    async cancelReservation(reservation: IReservation): Promise<boolean> {
+    async cancelReservation(reservation: IReservation): Promise<void> {
+        Logger.info(`Rozpoczęcie anulowania rezerwacji ${reservation.id}`);
         //Logika anulowania
 
-        //1.Usunięcie rezerwacji z bazy danych
+        if(reservation.status === "cancelled") {
+            throw new DomainError(`Rezerwacja ${reservation.id} jest już anulowana`);
+        }
+
         try {
-            await this.db.removeReservation(reservation);
 
-            //2.Zlecenie wykonania zwrotu pieniędzy
             const payment = await this.paymentService.findPayment(reservation.paymentId);
-
             await this.paymentService.refundPayment(payment);
 
-            //3.Zwolnienie miejsca
-            const flightId: number = reservation.flightId;
-            const seatsToFreeUp: number = -(reservation.passengers.length);
-            await this.flightService.updateAvailableSeats(flightId, seatsToFreeUp);
+
+
+            try {
+                const seatsToFreeUp: number = -(reservation.passengers.length);
+                await this.flightService.updateAvailableSeats(reservation.flightId, seatsToFreeUp);
+            } catch(error) {
+                Logger.error(`Zwrot wykonany, ale nie udało się zwolnić miejsc dla lotu ${reservation.flightId}`, error);
+            }
+
+            await this.db.removeReservation(reservation);
+
+
+            Logger.info(`Pomyślnie anulowano rezerwację ${reservation.id}`);
         }
         catch(error) {
-            console.error(error);
+            if(error instanceof DomainError || error instanceof InfrastructureError) throw error;
+
+            throw new InfrastructureError(`Wystąpił nieoczekiwany błąd podczas anulowania rezerwacji`, error);
         }
-        console.log(`Pomyślnie anulowano rezerwację ${reservation.id}`);
-        return true;
+
     }
 
 }

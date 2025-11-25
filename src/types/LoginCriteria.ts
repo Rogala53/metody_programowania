@@ -1,4 +1,4 @@
 export type LoginCriteria = {
-    username: string;
+    email: string;
     password: string;
 }
