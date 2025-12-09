@@ -32,7 +32,7 @@ export class PaymentService implements IPaymentService {
 
             Logger.info(`Płatność dla rezerwacji ${reservation.id} zakończona sukcesem`);
         } catch (error) {
-            throw new InfrastructureError(`Krytyczny błąd bramki płatności dla rezerwacji ${reservation.id}`, error);
+            throw new InfrastructureError(`Krytyczny błąd bramki płatności dla rezerwacji ${reservation.id}`, error as Error);
         }
 
 
@@ -48,7 +48,7 @@ export class PaymentService implements IPaymentService {
         } catch (error) {
             if (error instanceof DomainError) throw error;
 
-            throw new InfrastructureError(`Nie udało się anulować płatności ${payment.id}`, error);
+            throw new InfrastructureError(`Nie udało się anulować płatności ${payment.id}`, error as Error);
         }
     }
 
@@ -57,7 +57,7 @@ export class PaymentService implements IPaymentService {
         try {
             payment.status = status;
         } catch (error) {
-            throw new InfrastructureError(`Błąd aktualizacji statusu płatności ${payment.id}`, error);
+            throw new InfrastructureError(`Błąd aktualizacji statusu płatności ${payment.id}`, error as Error);
         }
 
     }
@@ -77,7 +77,7 @@ export class PaymentService implements IPaymentService {
         } catch (error) {
             if (error instanceof DomainError) throw error;
 
-            throw new InfrastructureError(`Krytyczny błąd podczas zwracania płatności ${payment.id} na konto ${payment.userId}`, error);
+            throw new InfrastructureError(`Krytyczny błąd podczas zwracania płatności ${payment.id} na konto ${payment.userId}`, error as Error);
         }
     }
 
@@ -94,7 +94,7 @@ export class PaymentService implements IPaymentService {
         } catch (error) {
             if (error instanceof DomainError) throw error;
 
-            throw new InfrastructureError(`Błąd odczytu płatności ${id}`, error);
+            throw new InfrastructureError(`Błąd odczytu płatności ${id}`, error as Error);
         }
     }
 }

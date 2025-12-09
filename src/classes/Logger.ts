@@ -1,10 +1,18 @@
-// @ts-ignore
 export enum LogLevel { DEBUG, INFO, WARN, ERROR}
 
 export class Logger {
+    private static instance: Logger | null = null;
+    private constructor() {}
+
+    public static getInstance(): Logger {
+        if(this.instance == null) {
+            this.instance = new Logger();
+        }
+        return this.instance;
+    }
     static log(level: LogLevel, message: string, meta?: any) {
-        const timestamp = new Date().toISOString();
-        console.log(`[${timestamp}] [${LogLevel[level]} ${message}`, meta || '');
+        const timestamp = new Date().toLocaleDateString("pl-PL", { year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "numeric", second: "numeric" });
+        console.log(`[${timestamp}] ${LogLevel[level]} ${message}`, meta || '');
     }
     static error(message: string, error?: any) {
         this.log(LogLevel.ERROR, message, error);

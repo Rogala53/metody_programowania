@@ -28,7 +28,7 @@ class UserService implements IUserService {
         } catch (error) {
             if(error instanceof DomainError) throw error;
 
-            throw new InfrastructureError("Wystąpił nieoczekiwany błąd podczas logowania", error);
+            throw new InfrastructureError("Wystąpił nieoczekiwany błąd podczas logowania", error as Error);
         }
     }
     async createAccount(data: UserCriteria): Promise<void> {
@@ -50,7 +50,7 @@ class UserService implements IUserService {
         } catch (error) {
             if(error instanceof DomainError || error instanceof InfrastructureError) throw error;
 
-            throw new InfrastructureError("Wystąpił nieoczekiwany błąd podczas tworzenia konta użytkownika", error);
+            throw new InfrastructureError("Wystąpił nieoczekiwany błąd podczas tworzenia konta użytkownika", error as Error);
         }
 
     }
@@ -71,7 +71,7 @@ class UserService implements IUserService {
         } catch (error) {
             if(error instanceof DomainError) throw error;
 
-            throw new InfrastructureError("Wystąpił nieoczekiwany błąd podczas aktualizowania maila", error);
+            throw new InfrastructureError("Wystąpił nieoczekiwany błąd podczas aktualizowania maila", error as Error);
         }
 
     }

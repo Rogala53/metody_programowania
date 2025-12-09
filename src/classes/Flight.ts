@@ -21,4 +21,19 @@ export class Flight implements IFlight {
         this.price = price;
     }
 
+    public clone(newId: number, newDepartureDate: Date): Flight {
+        const duration = this.arrivalTime.getTime() - this.departureTime.getTime();
+        const newArrivalDate = new Date(newDepartureDate.getTime() + duration);
+
+        return new Flight(
+            newId,
+            this.origin,
+            this.destination,
+            newDepartureDate,
+            newArrivalDate,
+            this.airline,
+            this.availableSeats,
+            this.price
+        );
+    }
 }

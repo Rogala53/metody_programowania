@@ -19,13 +19,13 @@ export class FlightService implements IFlightService {
             return await this.db.findFlights(criteria);
         } catch (error) {
             if (error instanceof DomainError) throw error;
-            throw new InfrastructureError(`Wystąpił krytyczny błąd podczas wyszukiwania lotów`, error);
+            throw new InfrastructureError(`Wystąpił krytyczny błąd podczas wyszukiwania lotów`, error as Error);
         }
     }
     async getFlightDetails(flightId: number): Promise<IFlight | null> {
         Logger.info(`Wyszukiwanie informacji o locie ${flightId}`)
         try {
-            return await this.db.findFlightById(flightId);
+            return await this.db.findById(flightId);
         } catch (error) {
             Logger.error(`Serwis: Błąd podczas pobierania detali lotu ${flightId}`, error);
             throw error;
@@ -36,7 +36,7 @@ export class FlightService implements IFlightService {
 
         Logger.info(`Rozpoczęcie aktualizacji liczby miejsc lotu ${flightId}`);
         try {
-            const flight: IFlight | null = await this.db.findFlightById(flightId);
+            const flight: IFlight | null = await this.db.findById(flightId);
 
             if(!flight) {
                 throw new DomainError(`Nie znaleziono lotu o id ${flightId}`);
@@ -55,7 +55,7 @@ export class FlightService implements IFlightService {
         catch(error) {
             if (error instanceof DomainError) throw error;
 
-            throw new InfrastructureError(`Krytyczny błąd podczas aktualizowania liczby miejsc`, error)
+            throw new InfrastructureError(`Krytyczny błąd podczas aktualizowania liczby miejsc`, error as Error)
         }
     }
 }

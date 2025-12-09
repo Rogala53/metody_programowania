@@ -1,6 +1,6 @@
 import type {ReservationCriteria} from "../../types/ReservationCriteria.ts";
 import type { IReservation } from "../../interfaces/IReservation.ts";
-import {Reservation} from "../Reservation.ts";
+import {ReservationBuilder} from "../ReservationBuilder.ts";
 import type {ITicketService} from "../../interfaces/ITicketService.ts";
 import type {IPaymentService} from "../../interfaces/IPaymentService.ts";
 import type {IReservationDbService} from "../../interfaces/IReservationDbService.ts";
@@ -10,6 +10,7 @@ import {Logger} from "../Logger.ts";
 import {InfrastructureError} from "../../exceptions/InfrastructureError.ts";
 import {DomainError} from "../../exceptions/DomainError.ts";
 import {Payment} from "../Payment.ts";
+import {Validator} from "../Validator.ts";
 
 export class ReservationService {
     private db: IReservationDbService;
@@ -30,9 +31,7 @@ export class ReservationService {
    async createReservation(criteria: ReservationCriteria): Promise<void> {
         Logger.info(`Tworzenie rezerwacji dla lotu: ${criteria.flightId}`);
         try {
-            if(criteria.passengers.length <= 0) {
-                throw new ValidationError("Rezerwacja musi zawierać co najmnniej jednego pasażera");
-            }
+            Validator.validatePositiveNumber(criteria.passengers.length, "Lista pasażerów");
 
             const flight = await this.flightService.getFlightDetails(criteria.flightId);
             if(!flight) {
@@ -41,19 +40,19 @@ export class ReservationService {
 
             const totalPrice = flight.price * criteria.passengers.length;
 
-            const reservationData: ReservationCriteria = {
-                id: criteria.id,
-                user: criteria.user,
-                flightId: flight.id,
-                paymentId: criteria.paymentId,
-                passengers: criteria.passengers,
-                tickets: criteria.tickets,
-                ticketsClass: criteria.ticketsClass,
-                status: "confirmed",
-                totalPrice: totalPrice,
-                createdAt: new Date()
-            };
-            const newReservation = new Reservation(reservationData);
+            const newReservation = new ReservationBuilder()
+                .setId(criteria.id)
+                .setUser(criteria.user)
+                .setFlightId(criteria.flightId)
+                .setPaymentId(criteria.paymentId)
+                .setPassengers(criteria.passengers)
+                .setTickets(criteria.tickets)
+                .setTicketsClass(criteria.ticketsClass)
+                .setStatus("confirmed")
+                .setTotalPrice(criteria.totalPrice)
+                .setCreatedAt(new Date())
+                .build();
+
 
             try {
                 await this.paymentService.payForReservation(newReservation ,totalPrice);
@@ -69,7 +68,7 @@ export class ReservationService {
                     new Payment(newReservation.id, newReservation.user.id, newReservation.flightId, "accepted")
                 );
 
-                throw new InfrastructureError("Błąd zapisu rezerwacji. Środki zostały zwrócone", error)
+                throw new InfrastructureError("Błąd zapisu rezerwacji. Środki zostały zwrócone", error as Error)
             }
             try {
                 await this.db.addReservation(newReservation);
@@ -101,7 +100,7 @@ export class ReservationService {
                     throw error;
             }
 
-            throw new InfrastructureError("Nieoczekiwany błąd podczas tworzenia rezerwacji", error);
+            throw new InfrastructureError("Nieoczekiwany błąd podczas tworzenia rezerwacji", error as Error);
         }
    }
 
@@ -116,13 +115,13 @@ export class ReservationService {
             if(reservation.status === "cancelled" || reservation.status === "rejected") {
                 throw new DomainError(`Nie można edytować rezerwacji o statusie ${reservation.id}`);
             }
-            await this.db.updateReservation(reservation);
+            await this.db.updateReservation(reservation.id, reservation);
 
             Logger.info(`Pomyślnie zaktualizowano rezerwację ${reservation.id}`);
         } catch (error) {
             if (error instanceof DomainError) throw error;
 
-            throw new InfrastructureError(`Nieoczekiwany błąd podczas edycji rezerwacji ${reservation.id}`);
+            throw new InfrastructureError(`Nieoczekiwany błąd podczas edycji rezerwacji ${reservation.id}`, error as Error);
         }
 
    }
@@ -145,10 +144,10 @@ export class ReservationService {
                 const seatsToFreeUp: number = -(reservation.passengers.length);
                 await this.flightService.updateAvailableSeats(reservation.flightId, seatsToFreeUp);
             } catch(error) {
-                Logger.error(`Zwrot wykonany, ale nie udało się zwolnić miejsc dla lotu ${reservation.flightId}`, error);
+                Logger.error(`Zwrot wykonany, ale nie udało się zwolnić miejsc dla lotu ${reservation.flightId}`, error as Error);
             }
 
-            await this.db.removeReservation(reservation);
+            await this.db.deleteReservation(reservation);
 
 
             Logger.info(`Pomyślnie anulowano rezerwację ${reservation.id}`);
@@ -156,7 +155,7 @@ export class ReservationService {
         catch(error) {
             if(error instanceof DomainError || error instanceof InfrastructureError) throw error;
 
-            throw new InfrastructureError(`Wystąpił nieoczekiwany błąd podczas anulowania rezerwacji`, error);
+            throw new InfrastructureError(`Wystąpił nieoczekiwany błąd podczas anulowania rezerwacji`, error as Error);
         }
 
     }

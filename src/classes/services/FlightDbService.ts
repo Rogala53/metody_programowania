@@ -1,12 +1,13 @@
-import {DbService} from "./DbService"
 import type {FlightSearchCriteria} from "../../types/FlightSearchCriteria"
 import type {IFlight} from "../../interfaces/IFlight.ts";
 import {DomainError} from "../../exceptions/DomainError.ts";
 import {Logger} from "../Logger.ts";
 import {InfrastructureError} from "../../exceptions/InfrastructureError.ts";
+import {Validator} from "../Validator.ts";
+import {CrudRepository} from "../CrudRepository.ts";
+import type {IFlightDbService} from "../../interfaces/IFlightDbService.ts";
 
-export class FlightDbService extends DbService {
-    private flightsTable: IFlight[] = [];
+export class FlightDbService extends CrudRepository<IFlight> implements IFlightDbService {
 
     constructor(database: string, server: string, username: string, password: string) {
         super(database, server, username, password);
@@ -15,33 +16,25 @@ export class FlightDbService extends DbService {
     async addFlight(flight: IFlight): Promise<void> {
         Logger.info(`DB: Próba dodania lotu ${flight.id}`);
         try {
-            if (this.flightsTable.some(f => f.id === flight.id)) {
-                throw new DomainError(`Lot o id ${flight.id} już istnieje w bazie`);
-            }
-
-            this.flightsTable.push(flight);
+            this.add(flight);
             Logger.info(`DB: Dodano lot ${flight.id}`);
         } catch (error) {
             if (error instanceof DomainError) throw error;
 
-            throw new InfrastructureError(`Bład zapisu lotu ${flight.id}`, error);
+            throw new InfrastructureError(`Bład zapisu lotu ${flight.id}`, error as Error);
         }
     }
 
     async deleteFlight(flight: IFlight): Promise<void> {
         Logger.info(`DB: Usuwanie lotu ${flight.id}`);
         try {
-            const index = this.flightsTable.findIndex(f => f.id === flight.id);
-            if (index === -1) {
-                throw new DomainError(`Lot ${flight.id} nie istnieje w bazie danych`);
-            }
+            this.delete(flight.id);
 
-            this.flightsTable.splice(index, 1);
             Logger.info(`DB: Usunięto lot ${flight.id}`);
         } catch (error) {
             if (error instanceof DomainError) throw error;
 
-            throw new InfrastructureError(`Krytyczny błąd podczas usuwania lotu ${flight.id}`, error);
+            throw new InfrastructureError(`Krytyczny błąd podczas usuwania lotu ${flight.id}`, error as Error);
         }
     }
 
@@ -49,7 +42,7 @@ export class FlightDbService extends DbService {
         Logger.info(`DB: Wyszukiwanie lotów: do: ${criteria.destination}, z: ${criteria.origin} data: ${criteria.date}`);
         try {
             //filtrowanie lotów
-            return this.flightsTable.filter(flight => {
+            return this.items.filter(flight => {
                 //sprawdza, czy użytkownik podał np. miasto wylotu, jeśli tak sprawdza czy są równe, jeśli nie to zwraca true
                 //żeby nie odrzucić lotu tylko dlatego, że jakieś kryterium nie zostało podane
                 const matchesOrigin = criteria.origin ? flight.origin === criteria.origin : true;
@@ -64,28 +57,17 @@ export class FlightDbService extends DbService {
         }
     }
 
-    async findFlightById(flightId: number): Promise<IFlight | null> {
-        try {
-            const flight = this.flightsTable.find(flight => flight.id === flightId);
-            return flight || null;
-        } catch (error) {
-            throw new InfrastructureError(`Błąd odczytu lotu ${flightId}`, error);
-        }
-
-    }
-
     async updateFlightSeats(flightId: number, newSeatsCount: number): Promise<void> {
         Logger.info(`DB: Rozpoczęcie aktualizacji ilości miejsc dla lotu ${flightId}`)
 
         try {
-            let flight: IFlight | null = await this.findFlightById(flightId);
+            let flight: IFlight | null = await this.findById(flightId);
 
             if (!flight) {
                 throw new DomainError(`Nie znaleziono lotu ${flightId} do aktualizacji`);
             }
-            if (newSeatsCount < 0) {
-                throw new DomainError("Liczba miejsc nie może być ujemna");
-            }
+
+            Validator.validatePositiveNumber(newSeatsCount, "Liczba miejsc lotu");
 
             flight.availableSeats = newSeatsCount;
 
@@ -94,7 +76,7 @@ export class FlightDbService extends DbService {
         } catch (error) {
             if (error instanceof DomainError) throw error;
 
-            throw new InfrastructureError(`Błąd aktualizacji miejsc w locie ${flightId}`, error);
+            throw new InfrastructureError(`Błąd aktualizacji miejsc w locie ${flightId}`, error as Error);
         }
     }
 }

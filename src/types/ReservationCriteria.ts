@@ -1,8 +1,8 @@
-import {IPassenger} from "../interfaces/IPassenger"
-import {ReservationStatus} from "./ReservationStatus";
-import {IUser} from "../interfaces/IUser";
-import {ITicket} from "../interfaces/ITicket";
-import {TicketClass} from "./TicketClass";
+import type {IPassenger} from "../interfaces/IPassenger";
+import type {ReservationStatus} from "./ReservationStatus";
+import type {IUser} from "../interfaces/IUser";
+import type {ITicket} from "../interfaces/ITicket";
+import type {TicketClass} from "./TicketClass";
 
 export type ReservationCriteria = {
     id: number;

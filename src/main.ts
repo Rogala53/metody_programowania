@@ -113,7 +113,7 @@ async function main() {
             Logger.warn(`Błąd walidacji/domeny: ${error.message}`);
             // Np. wyświetl komunikat użytkownikowi na UI
         } else if (error instanceof InfrastructureError) {
-            Logger.error(`Awaria systemu: ${error.message}`, error.originalError);
+            Logger.error(`Awaria systemu: ${error.message}`, error.name);
             // Np. wyślij alert do admina
         } else {
             Logger.error("Nieznany błąd krytyczny", error);
